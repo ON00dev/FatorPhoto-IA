@@ -1,27 +1,41 @@
 {
     "requests": [
       {
+        "endpoint": "/login",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "username": "admin",
+          "password": "password"
+        },
+        "description": "Obtém o token JWT para autenticação."
+      },
+      {
         "endpoint": "/analyze",
         "method": "POST",
         "headers": {
+          "Authorization": "Bearer <JWT_TOKEN>",
           "Content-Type": "multipart/form-data"
         },
         "body": {
           "image": "path/to/source_image.jpg"
         },
-        "description": "Enviar uma imagem para análise e extrair os parâmetros de filtros."
+        "description": "Extrai parâmetros de filtros de uma imagem."
       },
       {
         "endpoint": "/apply",
         "method": "POST",
         "headers": {
+          "Authorization": "Bearer <JWT_TOKEN>",
           "Content-Type": "multipart/form-data"
         },
         "body": {
           "source_image": "path/to/source_image.jpg",
           "target_image": "path/to/target_image.jpg"
         },
-        "description": "Enviar uma imagem de referência e uma imagem-alvo para aplicar os filtros extraídos."
+        "description": "Aplica os parâmetros extraídos de uma imagem a outra."
       }
     ]
   }

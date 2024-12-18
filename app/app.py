@@ -1,13 +1,54 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
 from PIL import Image, ImageEnhance
 import cv2
 import numpy as np
 from werkzeug.utils import secure_filename
+from functools import wraps
+import jwt
+from datetime import datetime, timedelta
 
+# Configurações do aplicativo
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['SECRET_KEY'] = 'your_jwt_secret_key'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Habilitar CORS
+CORS(app)
+
+# Funções auxiliares para autenticação JWT
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        except Exception as e:
+            return jsonify({'error': 'Token is invalid'}), 401
+
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/login', methods=['POST'])
+def login():
+    auth = request.json
+    if not auth or not auth.get('username') or not auth.get('password'):
+        return jsonify({'error': 'Missing credentials'}), 400
+
+    # Usuário fixo para teste
+    if auth['username'] == 'admin' and auth['password'] == 'password':
+        token = jwt.encode({
+            'user': auth['username'],
+            'exp': datetime.utcnow() + timedelta(hours=1)
+        }, app.config['SECRET_KEY'], algorithm="HS256")
+        return jsonify({'token': token})
+
+    return jsonify({'error': 'Invalid credentials'}), 401
 
 class ImageFilterAI:
     def __init__(self):
@@ -67,6 +108,7 @@ class ImageFilterAI:
 ai = ImageFilterAI()
 
 @app.route('/analyze', methods=['POST'])
+@token_required
 def analyze_image():
     if 'image' not in request.files:
         return jsonify({"error": "No image file provided"}), 400
@@ -83,6 +125,7 @@ def analyze_image():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/apply', methods=['POST'])
+@token_required
 def apply_filters():
     if 'source_image' not in request.files or 'target_image' not in request.files:
         return jsonify({"error": "Source and target image files are required"}), 400
