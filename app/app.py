@@ -27,12 +27,20 @@ def token_required(f):
             return jsonify({'error': 'Token is missing'}), 401
 
         try:
+            # Remova o prefixo "Bearer " do token
+            if token.startswith("Bearer "):
+                token = token[7:]
+            print(f"Token recebido: {token}")  # Log do token recebido
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-        except Exception as e:
+            print(f"Token decodificado: {data}")  # Log do conteúdo do token
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError as e:
             return jsonify({'error': 'Token is invalid'}), 401
 
         return f(*args, **kwargs)
     return decorated
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -44,7 +52,7 @@ def login():
     if auth['username'] == 'admin' and auth['password'] == 'password':
         token = jwt.encode({
             'user': auth['username'],
-            'exp': datetime.utcnow() + timedelta(hours=1)
+            'exp': datetime.utcnow() + timedelta(hours=24)
         }, app.config['SECRET_KEY'], algorithm="HS256")
         return jsonify({'token': token})
 
