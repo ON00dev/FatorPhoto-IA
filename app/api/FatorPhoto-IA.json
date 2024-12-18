@@ -1,0 +1,28 @@
+{
+    "requests": [
+      {
+        "endpoint": "/analyze",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "multipart/form-data"
+        },
+        "body": {
+          "image": "path/to/source_image.jpg"
+        },
+        "description": "Enviar uma imagem para análise e extrair os parâmetros de filtros."
+      },
+      {
+        "endpoint": "/apply",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "multipart/form-data"
+        },
+        "body": {
+          "source_image": "path/to/source_image.jpg",
+          "target_image": "path/to/target_image.jpg"
+        },
+        "description": "Enviar uma imagem de referência e uma imagem-alvo para aplicar os filtros extraídos."
+      }
+    ]
+  }
+  
